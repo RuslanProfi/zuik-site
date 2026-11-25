@@ -32,7 +32,7 @@ window.ZUIK_DE={
 "fPhone": "Telefon (optional)",
 "fLand": "Bundesland",
 "fInterest": "Was interessiert Sie am meisten?",
-"cStatute": "Ich habe die <a href=\"/docs/statuten-zuik.pdf\" target=\"_blank\" rel=\"noopener\">Statuten</a> gelesen und möchte Mitglied von ZUIK werden *",
+"cStatute": "Ich habe die <a href=\"https://drive.google.com/file/d/1HcWIppWajtuuN1Nw6S7OHNpZRVoAKWRT/view\" target=\"_blank\" rel=\"noopener\">Statuten</a> gelesen und möchte Mitglied von ZUIK werden *",
 "cPrivacy": "Ich stimme der <a href=\"/datenschutz.html\" target=\"_blank\">Verarbeitung meiner Daten</a> zu (Datenschutz) *",
 "cNews": "Ich möchte Veranstaltungshinweise und News erhalten (alle 1–2 Wochen)",
 "joinSubmit": "Dem Verein beitreten",

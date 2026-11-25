@@ -16,7 +16,7 @@
     { start: '2026-05-30T12:00:00+02:00', end: '2026-05-30T14:00:00+02:00',
       uk: { title: 'Установчі збори: рішення створити ZUIK', meta: 'Відень · ухвалено статут асоціації' },
       de: { title: 'Gründungsversammlung: Beschluss zur Gründung von ZUIK', meta: 'Wien · Beschluss der Statuten' },
-      link: '/docs/statuten-zuik.pdf', linkLabel: { uk: 'Статут', de: 'Statuten' } }
+      link: 'https://drive.google.com/file/d/1HcWIppWajtuuN1Nw6S7OHNpZRVoAKWRT/view', linkLabel: { uk: 'Статут', de: 'Statuten' } }
   ];
   var MATERIALS = [
     { cat: 'docs', type: 'PDF', url: 'https://www.asyl.at/files/uploads/1046/vertriebene-aus-der-ukraine-260101_ukrainisch.pdf',
