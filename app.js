@@ -1,6 +1,7 @@
 'use strict';
 (function () {
   var HOOK = 'https://hook.eu2.make.com/t4rag48xji3xrdcvp6oplzr3ndt7iqcn';
+  var EVHOOK = 'https://hook.eu2.make.com/tyqrgeggl381y2u8snlcek1ibxppym5x';
   var DE = window.ZUIK_DE || {};
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -14,7 +15,7 @@
         desc: 'Запрошуємо на першу офлайн-зустріч спільноти ZUIK. Поговоримо про роботу в Австрії: як знайти своє місце на ринку праці, розвиватися у професії та відкрити власну справу (Gewerbe). Поділимося досвідом і разом обговоримо плани спільноти на 2027 рік. Гість зустрічі — фінансовий консультант Анатолій Матвійчук: відповість на запитання про фінанси та податки. Участь безкоштовна, кількість місць обмежена.' },
       de: { title: 'Arbeit in Österreich: der Einstieg – erstes Treffen von ZUIK vor Ort', meta: 'Stadtraum Mitte 15, Rustensteg 1, 1150 Wien · Gast: Finanzberater Anatolij Matwijtschuk',
         desc: 'Wir laden zum ersten Treffen der ZUIK-Gemeinschaft vor Ort ein. Wir sprechen über Arbeit in Österreich: den eigenen Platz am Arbeitsmarkt finden, sich beruflich weiterentwickeln und ein Gewerbe gründen. Wir teilen Erfahrungen und besprechen gemeinsam die Pläne der Gemeinschaft für 2027. Gast: Finanzberater Anatolij Matwijtschuk beantwortet Fragen zu Finanzen und Steuern. Die Teilnahme ist kostenlos, die Plätze sind begrenzt (Veranstaltung auf Ukrainisch).' },
-      register: 'mailto:info@zuik.at?subject=' + encodeURIComponent('Реєстрація: зустріч 02.12 «Робота в Австрії»'),
+      reg: { id: '2026-12-02', cap: 30, place: 'Stadtraum Mitte 15, Rustensteg 1, 1150 Wien' },
       map: 'https://maps.app.goo.gl/YkH2ciVM7ANwJZ3P8',
       link: 'https://drive.google.com/drive/folders/1ix82Sftkqw_zUFfH2uPwGj5_PEVEW9L2',
       linkLabel: { uk: 'Фото · матеріали', de: 'Fotos · Materialien' } },
@@ -89,7 +90,7 @@
   function showCount(n) { $$('[data-count]').forEach(function (e) { e.textContent = n; }); }
   function loadCount() {
     var c = null; try { c = JSON.parse(sessionStorage.getItem('zuik-count') || 'null'); } catch (e) {}
-    if (c && Date.now() - c.t < 10 * 60 * 1000) { showCount(c.n); return; }
+    if (c && Date.now() - c.t < 60 * 1000) { showCount(c.n); return; }
     fetch(HOOK + '?type=count').then(function (r) { return r.json(); }).then(function (d) {
       if (typeof d.count === 'number') { showCount(d.count); try { sessionStorage.setItem('zuik-count', JSON.stringify({ n: d.count, t: Date.now() })); } catch (e) {} }
     }).catch(function () { showCount('37+'); });
@@ -97,20 +98,25 @@
   if ($('[data-count]')) loadCount();
 
   /* ---------- drawer ---------- */
-  var drawer = $('#join'), lastFocus = null;
+  var drawer = $('#join'), lastFocus = null, openD = null;
+  function openDrawer(d) {
+    if (openD && openD !== d) openD.hidden = true;
+    openD = d; lastFocus = document.activeElement; d.hidden = false;
+    requestAnimationFrame(function () { document.body.classList.add('drawer-open'); var f = $('input', d); if (f) f.focus(); });
+  }
   function openJoin() {
-    lastFocus = document.activeElement; drawer.hidden = false;
-    requestAnimationFrame(function () { document.body.classList.add('drawer-open'); var f = $('input', drawer); if (f) f.focus(); });
+    openDrawer(drawer);
     if (location.hash !== '#join') history.replaceState(null, '', '#join');
   }
   function closeJoin() {
+    var d = openD || drawer;
     document.body.classList.remove('drawer-open');
-    setTimeout(function () { drawer.hidden = true; }, 260);
+    setTimeout(function () { d.hidden = true; }, 260);
     if (location.hash === '#join') history.replaceState(null, '', location.pathname + location.search);
     if (lastFocus) lastFocus.focus();
   }
   $$('[data-join]').forEach(function (b) { b.addEventListener('click', openJoin); });
-  $$('[data-close]').forEach(function (b) { b.addEventListener('click', closeJoin); });
+  document.addEventListener('click', function (e) { if (e.target.closest('[data-close]')) closeJoin(); });
   addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('drawer-open')) closeJoin(); });
   if (location.hash === '#join') openJoin();
 
@@ -131,7 +137,7 @@
     if (!f.first_name.value.trim() || !f.last_name.value.trim() || !f.c_statute.checked || !f.c_privacy.checked) { st.textContent = L(MSG.required); st.classList.add('err'); return; }
     if (!emailRe.test(f.email.value.trim())) { st.textContent = L(MSG.email); st.classList.add('err'); f.email.focus(); return; }
     btn.disabled = true; st.textContent = L(MSG.sending);
-    post({ type: 'join', first_name: f.first_name.value.trim(), last_name: f.last_name.value.trim(), email: f.email.value.trim(),
+    post({ type: 'join', first_name: f.first_name.value.trim(), last_name: f.last_name.value.trim(), middle_name: f.middle_name ? f.middle_name.value.trim() : '', email: f.email.value.trim(),
       phone: f.phone.value.trim(), land: f.land.value, interest: f.interest.options[f.interest.selectedIndex].text,
       newsletter: f.newsletter.checked ? 'yes' : 'no', consent: 'yes', website: f.website.value })
       .then(function (d) {
@@ -174,9 +180,88 @@
     var p = viennaParts(ev.start), x = L(ev);
     var extra = full ? (x.desc ? '<p class="ev-desc">' + esc(x.desc) + '</p>' : '') +
       (ev.map ? '<p class="ev-links"><a href="' + esc(ev.map) + '" target="_blank" rel="noopener">' + (lang === 'de' ? 'Route auf Google Maps ↗' : 'Маршрут на Google Maps ↗') + '</a></p>' : '') : '';
-    return '<div class="event-card' + (full ? ' full' : '') + '"><div class="date">' + p.day + '<small>' + p.mon + '</small></div><div class="body"><div class="kicker">' + L(ev.kicker || MSG.online) + '</div><h3>' + esc(x.title) + '</h3><p>' + viennaDate(ev.start) + ', ' + p.time + ' · ' + esc(x.meta) + '</p>' + extra + '</div>' +
-      (ev.register ? '<a class="btn btn-white" href="' + esc(ev.register) + '">' + (lang === 'de' ? 'Anmelden' : 'Записатися') + '</a>' : '') + '</div>';
+    return '<div class="event-card' + (full ? ' full' : '') + '"><div class="date">' + p.day + '<small>' + p.mon + '</small></div><div class="body"><div class="kicker">' + L(ev.kicker || MSG.online) + '</div><h3>' + esc(x.title) + '</h3><p>' + viennaDate(ev.start) + ', ' + p.time + ' · ' + esc(x.meta) + '</p>' + extra +
+      (ev.reg ? '<p class="ev-seats">' + seatsText(ev) + '</p>' : '') + '</div>' +
+      (ev.reg ? '<button class="btn btn-white" type="button" data-evreg="' + esc(ev.reg.id) + '">' + (lang === 'de' ? 'Anmelden' : 'Записатися') + '</button>' :
+       ev.register ? '<a class="btn btn-white" href="' + esc(ev.register) + '">' + (lang === 'de' ? 'Anmelden' : 'Записатися') + '</a>' : '') + '</div>';
   }
+  /* ---------- event registration (limited seats) ---------- */
+  var SEATS = {};
+  function seatsText(ev) {
+    var cap = ev.reg.cap, n = SEATS[ev.reg.id], de = lang === 'de';
+    var base = de ? 'Teilnahme vor Ort ist auf ' + cap + ' Personen begrenzt: Die ersten ' + cap + ' Anmeldungen erhalten eine Einladung per E-Mail, alle weiteren kommen auf die Warteliste.'
+                  : 'Офлайн-участь обмежена ' + cap + ' особами: перші ' + cap + ', хто заповнить форму, отримають запрошення на e-mail, решта — потрапить до листа очікування.';
+    if (typeof n !== 'number') return esc(base);
+    var left = Math.max(cap - n, 0);
+    return esc(base) + ' <b>' + (left > 0 ? (de ? 'Freie Plätze: ' + left + ' von ' + cap : 'Вільних місць: ' + left + ' з ' + cap)
+                                         : (de ? 'Alle Plätze sind vergeben – Anmeldung auf die Warteliste.' : 'Усі місця зайняті — реєстрація до листа очікування.')) + '</b>';
+  }
+  function loadSeats() {
+    EVENTS.forEach(function (ev) {
+      if (!ev.reg || Date.parse(ev.end) < Date.now()) return;
+      fetch(EVHOOK + '?type=event_count&event=' + encodeURIComponent(ev.reg.id)).then(function (r) { return r.json(); })
+        .then(function (d) { if (typeof d.count === 'number') { SEATS[ev.reg.id] = d.count; renderEvents(); } }).catch(function () {});
+    });
+  }
+  var evDrawer = null, evCur = null;
+  function evT(uk, de) { return lang === 'de' ? de : uk; }
+  function openEvReg(id) {
+    evCur = EVENTS.filter(function (e) { return e.reg && e.reg.id === id; })[0]; if (!evCur) return;
+    if (!evDrawer) { evDrawer = document.createElement('aside'); evDrawer.className = 'drawer'; evDrawer.id = 'evreg';
+      evDrawer.setAttribute('role', 'dialog'); evDrawer.setAttribute('aria-modal', 'true'); evDrawer.setAttribute('aria-labelledby', 'evTitle'); evDrawer.hidden = true;
+      document.body.appendChild(evDrawer); }
+    var x = L(evCur), p = viennaParts(evCur.start), when = viennaDate(evCur.start) + ', ' + p.time, logo = $('#join .logo');
+    evDrawer.innerHTML = '<div class="drawer-head"><span class="logo">' + (logo ? logo.innerHTML : 'ZUIK') + '</span><button class="close" type="button" data-close aria-label="Close">×</button></div>' +
+      '<div id="evForm"><h2 id="evTitle">' + evT('Реєстрація на подію', 'Anmeldung zur Veranstaltung') + '</h2>' +
+      '<p class="lead"><b>' + esc(x.title) + '</b><br>' + when + ' · ' + esc(evCur.reg.place) + '</p>' +
+      '<p class="seat-note">' + seatsText(evCur) + '</p>' +
+      '<form id="evF" novalidate><div class="row2"><label class="field">' + evT('Ім’я *', 'Vorname *') + '<input class="input" name="first_name" autocomplete="given-name" maxlength="80" required></label>' +
+      '<label class="field">' + evT('Прізвище *', 'Nachname *') + '<input class="input" name="last_name" autocomplete="family-name" maxlength="80" required></label></div>' +
+      '<label class="field">E-mail *<input class="input" type="email" name="email" autocomplete="email" maxlength="150" required></label>' +
+      '<label class="field">' + evT('Телефон (необов’язково)', 'Telefon (optional)') + '<input class="input" type="tel" name="phone" autocomplete="tel" maxlength="40"></label>' +
+      '<label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>' +
+      '<div class="checks"><label class="check"><input type="checkbox" name="c_privacy" required><span>' + evT('Погоджуюсь з <a href="/datenschutz.html" target="_blank">обробкою персональних даних</a> для реєстрації *', 'Ich stimme der <a href="/datenschutz.html" target="_blank">Verarbeitung meiner Daten</a> für die Anmeldung zu *') + '</span></label></div>' +
+      '<button class="btn btn-blue" type="submit" style="width:100%">' + evT('Зареєструватися', 'Verbindlich anmelden') + '</button><p class="status" role="status" id="evStatus"></p>' +
+      '<p class="fine">' + evT('Участь безкоштовна. Якщо плани зміняться — напишіть на info@zuik.at, щоб місце отримала людина з листа очікування.', 'Die Teilnahme ist kostenlos. Falls Sie verhindert sind, schreiben Sie bitte an info@zuik.at, damit der Platz weitergegeben werden kann.') + '</p></form></div>' +
+      '<div id="evDone" class="done" hidden><div class="big" id="evNum">✓</div><h2 id="evDoneH"></h2><p class="lead" id="evDoneT"></p><button class="btn btn-line" type="button" data-close>' + evT('Закрити', 'Schließen') + '</button></div>';
+    $('#evF').addEventListener('submit', submitEv);
+    openDrawer(evDrawer);
+  }
+  function submitEv(e) {
+    e.preventDefault();
+    var F = e.target, f = F.elements, st = $('#evStatus'), btn = $('button[type=submit]', F), ev = evCur, x = L(ev), p = viennaParts(ev.start);
+    st.className = 'status';
+    if (!f.first_name.value.trim() || !f.last_name.value.trim() || !f.c_privacy.checked) { st.textContent = L(MSG.required); st.classList.add('err'); return; }
+    if (!emailRe.test(f.email.value.trim())) { st.textContent = L(MSG.email); st.classList.add('err'); f.email.focus(); return; }
+    btn.disabled = true; st.textContent = L(MSG.sending);
+    var data = { type: 'event_register', event: ev.reg.id, cap: String(ev.reg.cap), event_title: x.title,
+      event_when: viennaDate(ev.start) + ', ' + p.time + '–' + viennaParts(ev.end).time, event_place: ev.reg.place, event_map: ev.map || '',
+      first_name: f.first_name.value.trim(), last_name: f.last_name.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim(),
+      consent: 'yes', website: f.website.value, lang: lang };
+    fetch(EVHOOK, { method: 'POST', body: new URLSearchParams(data) }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) {
+        if (!d.ok) throw new Error('x');
+        var pos = d.position, cap = ev.reg.cap, inv = d.new === false ? d.status === 'Запрошено' : pos <= cap;
+        $('#evForm').hidden = true; $('#evDone').hidden = false;
+        $('#evNum').textContent = inv ? pos : '⏳';
+        if (d.new === false) {
+          $('#evDoneH').textContent = evT('Ви вже зареєстровані', 'Sie sind bereits angemeldet');
+          $('#evDoneT').textContent = inv ? evT('Ваш номер — ' + pos + ' з ' + cap + '. Запрошення вже надіслано на ваш e-mail.', 'Ihre Nummer: ' + pos + ' von ' + cap + '. Die Einladung wurde bereits per E-Mail verschickt.')
+                                         : evT('Ви в листі очікування під номером ' + (pos - cap) + '.', 'Sie stehen auf Platz ' + (pos - cap) + ' der Warteliste.');
+        } else if (inv) {
+          $('#evDoneH').textContent = evT('Ви зареєстровані!', 'Sie sind angemeldet!');
+          $('#evDoneT').textContent = evT('Ваш номер — ' + pos + ' з ' + cap + '. Запрошення надіслано на ваш e-mail (перевірте також «Спам»).', 'Ihre Nummer: ' + pos + ' von ' + cap + '. Die Einladung wurde per E-Mail verschickt (bitte ggf. Spam-Ordner prüfen).');
+        } else {
+          $('#evDoneH').textContent = evT('Ви в листі очікування', 'Sie stehen auf der Warteliste');
+          $('#evDoneT').textContent = evT('Усі ' + cap + ' місць уже зайняті. Ваш номер у листі очікування — ' + (pos - cap) + '. Якщо місце звільниться, ми напишемо вам.', 'Alle ' + cap + ' Plätze sind vergeben. Ihr Wartelistenplatz: ' + (pos - cap) + '. Wird ein Platz frei, melden wir uns.');
+        }
+        if (d.new !== false) { SEATS[ev.reg.id] = pos; renderEvents(); }
+        $('.close', evDrawer).focus();
+      })
+      .catch(function () { st.textContent = L(MSG.fail); st.classList.add('err'); })
+      .then(function () { btn.disabled = false; });
+  }
+  document.addEventListener('click', function (e) { var b = e.target.closest('[data-evreg]'); if (b) openEvReg(b.dataset.evreg); });
   function renderEvents() {
     var now = Date.now();
     var up = EVENTS.filter(function (e) { return Date.parse(e.end) > now; }).sort(function (a, b) { return Date.parse(a.start) - Date.parse(b.start); });
@@ -224,4 +309,5 @@
   });
 
   applyLang();
+  loadSeats();
 })();
