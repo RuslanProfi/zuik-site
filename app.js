@@ -8,6 +8,16 @@
 
   /* ---------- data ---------- */
   var EVENTS = [
+    { start: '2026-12-02T18:00:00+01:00', end: '2026-12-02T20:30:00+01:00',
+      kicker: { uk: 'Анонс · офлайн · безкоштовно', de: 'Ankündigung · vor Ort · kostenlos' },
+      uk: { title: 'Робота в Австрії: з чого почати — перша офлайн-зустріч ZUIK', meta: 'Stadtraum Mitte 15, Rustensteg 1, 1150 Wien · гість: фінансовий консультант Анатолій Матвійчук',
+        desc: 'Запрошуємо на першу офлайн-зустріч спільноти ZUIK. Поговоримо про роботу в Австрії: як знайти своє місце на ринку праці, розвиватися у професії та відкрити власну справу (Gewerbe). Поділимося досвідом і разом обговоримо плани спільноти на 2027 рік. Гість зустрічі — фінансовий консультант Анатолій Матвійчук: відповість на запитання про фінанси та податки. Участь безкоштовна, кількість місць обмежена.' },
+      de: { title: 'Arbeit in Österreich: der Einstieg – erstes Treffen von ZUIK vor Ort', meta: 'Stadtraum Mitte 15, Rustensteg 1, 1150 Wien · Gast: Finanzberater Anatolij Matwijtschuk',
+        desc: 'Wir laden zum ersten Treffen der ZUIK-Gemeinschaft vor Ort ein. Wir sprechen über Arbeit in Österreich: den eigenen Platz am Arbeitsmarkt finden, sich beruflich weiterentwickeln und ein Gewerbe gründen. Wir teilen Erfahrungen und besprechen gemeinsam die Pläne der Gemeinschaft für 2027. Gast: Finanzberater Anatolij Matwijtschuk beantwortet Fragen zu Finanzen und Steuern. Die Teilnahme ist kostenlos, die Plätze sind begrenzt (Veranstaltung auf Ukrainisch).' },
+      register: 'mailto:info@zuik.at?subject=' + encodeURIComponent('Реєстрація: зустріч 02.12 «Робота в Австрії»'),
+      map: 'https://maps.app.goo.gl/YkH2ciVM7ANwJZ3P8',
+      link: 'https://drive.google.com/drive/folders/1ix82Sftkqw_zUFfH2uPwGj5_PEVEW9L2',
+      linkLabel: { uk: 'Фото · матеріали', de: 'Fotos · Materialien' } },
     { start: '2026-11-20T18:00:00+01:00', end: '2026-11-20T19:00:00+01:00',
       uk: { title: 'Вебінар «Grundversorgung: чому вимагають повернути гроші і як цього уникнути»', meta: 'Онлайн · Google Meet · спікер: адвокат Андрій Іванський (Rechtsanwaltskammer Wien)' },
       de: { title: 'Webinar „Grundversorgung: Warum Geld zurückgefordert wird und wie man das vermeidet“', meta: 'Online · Google Meet · Referent: Andrij Iwanskyj (Rechtsanwaltskammer Wien)' },
@@ -160,10 +170,12 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function viennaDate(iso) { return new Date(iso).toLocaleDateString('de-AT', { timeZone: 'Europe/Vienna', day: '2-digit', month: '2-digit', year: 'numeric' }); }
   function viennaParts(iso) { var d = new Date(iso); return { day: d.toLocaleDateString('de-AT', { timeZone: 'Europe/Vienna', day: '2-digit' }), mon: MONTHS[lang][+d.toLocaleDateString('en-GB', { timeZone: 'Europe/Vienna', month: 'numeric' }) - 1], time: d.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' }) }; }
-  function eventCard(ev) {
+  function eventCard(ev, full) {
     var p = viennaParts(ev.start), x = L(ev);
-    return '<div class="event-card"><div class="date">' + p.day + '<small>' + p.mon + '</small></div><div class="body"><div class="kicker">' + L(MSG.online) + '</div><h3>' + esc(x.title) + '</h3><p>' + viennaDate(ev.start) + ', ' + p.time + ' · ' + esc(x.meta) + '</p></div>' +
-      (ev.register ? '<a class="btn btn-white" href="' + esc(ev.register) + '" target="_blank" rel="noopener">' + (lang === 'de' ? 'Anmelden' : 'Записатися') + '</a>' : '') + '</div>';
+    var extra = full ? (x.desc ? '<p class="ev-desc">' + esc(x.desc) + '</p>' : '') +
+      (ev.map ? '<p class="ev-links"><a href="' + esc(ev.map) + '" target="_blank" rel="noopener">' + (lang === 'de' ? 'Route auf Google Maps ↗' : 'Маршрут на Google Maps ↗') + '</a></p>' : '') : '';
+    return '<div class="event-card' + (full ? ' full' : '') + '"><div class="date">' + p.day + '<small>' + p.mon + '</small></div><div class="body"><div class="kicker">' + L(ev.kicker || MSG.online) + '</div><h3>' + esc(x.title) + '</h3><p>' + viennaDate(ev.start) + ', ' + p.time + ' · ' + esc(x.meta) + '</p>' + extra + '</div>' +
+      (ev.register ? '<a class="btn btn-white" href="' + esc(ev.register) + '">' + (lang === 'de' ? 'Anmelden' : 'Записатися') + '</a>' : '') + '</div>';
   }
   function renderEvents() {
     var now = Date.now();
@@ -173,7 +185,7 @@
     if (next) next.innerHTML = up.length ? eventCard(up[0]) :
       '<div class="event-card quiet"><div class="date">✦</div><div class="body"><div class="kicker">' + L(MSG.soon) + '</div><h3>' + L(MSG.noEvent) + '</h3><p>' + L(MSG.noEventSub) + '</p></div></div>';
     var upc = $('#upcoming');
-    if (upc) upc.innerHTML = up.length ? up.map(eventCard).join('') : '<p class="empty">' + L(MSG.none) + '</p>';
+    if (upc) upc.innerHTML = up.length ? up.map(function (e) { return eventCard(e, true); }).join('') : '<p class="empty">' + L(MSG.none) + '</p>';
     var ar = $('#archive');
     if (ar) ar.innerHTML = past.map(function (e) {
       var x = L(e);

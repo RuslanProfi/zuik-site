@@ -148,3 +148,7 @@ body.drawer-open .drawer{transform:none}
 .gallery iframe{width:100%;height:560px;border:0;border-radius:var(--r);display:block}
 .gal-ph .fine{font-size:12.5px;color:var(--muted);margin:10px 0 6px}
 .gal-ph a{font-size:14px}
+.event-card.full{align-items:flex-start;width:100%;margin:0 0 14px;padding:20px 22px}
+.event-card .ev-desc{margin:10px 0 0;font-size:14.5px;opacity:.95;line-height:1.55}
+.event-card .ev-links{margin:8px 0 0}
+.event-card .ev-links a{color:var(--yellow);font-size:14px}
